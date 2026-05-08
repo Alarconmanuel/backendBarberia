@@ -2,6 +2,7 @@ package com.barberia.service;
 
 import com.barberia.dto.CitaDTO;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 public interface CitaService {
@@ -15,4 +16,5 @@ public interface CitaService {
     CitaDTO iniciar(Long id);
     CitaDTO finalizar(Long id);
     CitaDTO marcarNoPresento(Long id);
+    List<LocalTime> getDisponibilidad(Long idBarbero, LocalDate fecha);
 }

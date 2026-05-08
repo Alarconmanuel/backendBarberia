@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,17 +28,20 @@ public class CitaServiceIMP implements CitaService {
     private final BarberoRepository barberoRepository;
     private final ServicioRepository servicioRepository;
     private final PromedioClienteRepository promedioClienteRepository;
+    private final HorarioBarberoRepository horarioBarberoRepository;
 
     public CitaServiceIMP(CitaRepository citaRepository,
                           UsuarioRepository usuarioRepository,
                           BarberoRepository barberoRepository,
                           ServicioRepository servicioRepository,
-                          PromedioClienteRepository promedioClienteRepository) {
+                          PromedioClienteRepository promedioClienteRepository,
+                          HorarioBarberoRepository horarioBarberoRepository) {
         this.citaRepository = citaRepository;
         this.usuarioRepository = usuarioRepository;
         this.barberoRepository = barberoRepository;
         this.servicioRepository = servicioRepository;
         this.promedioClienteRepository = promedioClienteRepository;
+        this.horarioBarberoRepository = horarioBarberoRepository;
     }
 
     private CitaDTO toDTO(Cita c) {
@@ -157,6 +161,32 @@ public class CitaServiceIMP implements CitaService {
         c.setEstado(EstadoCitaEnum.NO_PRESENTADO);
         c.setNoPresento(true);
         return toDTO(citaRepository.save(c));
+    }
+
+    public List<LocalTime> getDisponibilidad(Long idBarbero, LocalDate fecha) {
+        List<LocalTime> libres = new ArrayList<>();
+        List<Cita> ocupadas = citaRepository.findByBarberoYFecha(idBarbero, fecha);
+        
+        LocalTime inicioJornada = LocalTime.of(9, 0);
+        LocalTime finJornada = LocalTime.of(18, 0);
+        
+        LocalTime actual = inicioJornada;
+        while (actual.isBefore(finJornada)) {
+            boolean ocupado = false;
+            LocalTime siguiente = actual.plusMinutes(30);
+            
+            for (Cita c : ocupadas) {
+                if (c.getHoraInicio() != null && c.getHoraFin() != null && 
+                    actual.isBefore(c.getHoraFin()) && siguiente.isAfter(c.getHoraInicio())) {
+                    ocupado = true;
+                    break;
+                }
+            }
+            
+            if (!ocupado) libres.add(actual);
+            actual = actual.plusMinutes(30);
+        }
+        return libres;
     }
 
     private int calcularMinutos(Long idUsuario, Long idBarbero, Servicio servicio) {
