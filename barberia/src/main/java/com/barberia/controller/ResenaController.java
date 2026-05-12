@@ -38,7 +38,7 @@ public class ResenaController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('CLIENTE')")
+    @PreAuthorize("hasAnyRole('CLIENTE', 'SUPERADMIN', 'ADMINISTRADOR')")
     @Operation(summary = "Crear resena para una cita finalizada")
     public ResenaDTO create(@Valid @RequestBody ResenaDTO dto) {
         return resenaService.save(dto);
