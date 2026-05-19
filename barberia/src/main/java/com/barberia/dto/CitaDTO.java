@@ -1,7 +1,7 @@
 package com.barberia.dto;
 
 import com.barberia.enums.EstadoCitaEnum;
-import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import java.time.LocalDate;
@@ -21,7 +21,7 @@ public class CitaDTO {
     private Long idServicio;
 
     @NotNull(message = "La fecha es obligatoria")
-    @Future(message = "La fecha debe ser futura")
+    @FutureOrPresent(message = "La fecha debe ser futura o presente")
     private LocalDate fecha;
 
     @NotNull(message = "La hora de inicio es obligatoria")
