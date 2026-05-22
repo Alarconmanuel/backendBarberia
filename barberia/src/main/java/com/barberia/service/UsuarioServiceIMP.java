@@ -6,7 +6,6 @@ import com.barberia.model.Usuario;
 import com.barberia.repository.UsuarioRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -17,11 +16,9 @@ public class UsuarioServiceIMP implements UsuarioService {
     private static final Logger log = LoggerFactory.getLogger(UsuarioServiceIMP.class);
 
     private final UsuarioRepository usuarioRepository;
-    private final PasswordEncoder passwordEncoder;
 
-    public UsuarioServiceIMP(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+    public UsuarioServiceIMP(UsuarioRepository usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     private UsuarioDTO toDTO(Usuario u) {
@@ -59,28 +56,11 @@ public class UsuarioServiceIMP implements UsuarioService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
     }
 
-    private boolean isBcrypt(String password) {
-        return password != null && (password.startsWith("$2a$") || password.startsWith("$2b$") || password.startsWith("$2y$"));
-    }
-
     @Override
     @Transactional
     public UsuarioDTO save(UsuarioDTO dto) {
         log.info("Creando/actualizando usuario: {}", dto.getCorreo());
-
-        // Si es actualización y la contraseña está vacía, conservar la existente
-        if (dto.getIdUsuario() != null && (dto.getPassword() == null || dto.getPassword().isBlank())) {
-            usuarioRepository.findById(dto.getIdUsuario()).ifPresent(existing -> dto.setPassword(existing.getPassword()));
-        }
-
-        Usuario entity = toEntity(dto);
-
-        // Encodear solo si es texto plano (no es BCrypt)
-        if (entity.getPassword() != null && !isBcrypt(entity.getPassword())) {
-            entity.setPassword(passwordEncoder.encode(entity.getPassword()));
-        }
-
-        return toDTO(usuarioRepository.save(entity));
+        return toDTO(usuarioRepository.save(toEntity(dto)));
     }
 
     @Override
