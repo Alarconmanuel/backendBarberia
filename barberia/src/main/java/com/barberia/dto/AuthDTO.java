@@ -33,6 +33,8 @@ public class AuthDTO {
         private String password;
 
         private RolEnum rol;
+
+        private String telefono;
     }
 
     @Data

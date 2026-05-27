@@ -77,7 +77,7 @@ public class AuthController {
         Usuario usuario = new Usuario();
         usuario.setNombre(request.getNombre());
         usuario.setCorreo(request.getCorreoOTelefono());
-        usuario.setTelefono(null);
+        usuario.setTelefono(request.getTelefono());
         usuario.setPassword(passwordEncoder.encode(request.getPassword()));
         usuario.setRol(request.getRol() != null ? request.getRol() : RolEnum.CLIENTE);
         usuario.setActivo(true);

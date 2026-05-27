@@ -29,19 +29,22 @@ public class CitaServiceIMP implements CitaService {
     private final ServicioRepository servicioRepository;
     private final PromedioClienteRepository promedioClienteRepository;
     private final HorarioBarberoRepository horarioBarberoRepository;
+    private final TwilioService twilioService;
 
     public CitaServiceIMP(CitaRepository citaRepository,
                           UsuarioRepository usuarioRepository,
                           BarberoRepository barberoRepository,
                           ServicioRepository servicioRepository,
                           PromedioClienteRepository promedioClienteRepository,
-                          HorarioBarberoRepository horarioBarberoRepository) {
+                          HorarioBarberoRepository horarioBarberoRepository,
+                          TwilioService twilioService) {
         this.citaRepository = citaRepository;
         this.usuarioRepository = usuarioRepository;
         this.barberoRepository = barberoRepository;
         this.servicioRepository = servicioRepository;
         this.promedioClienteRepository = promedioClienteRepository;
         this.horarioBarberoRepository = horarioBarberoRepository;
+        this.twilioService = twilioService;
     }
 
     private CitaDTO toDTO(Cita c) {
@@ -95,7 +98,25 @@ public class CitaServiceIMP implements CitaService {
         int minutos = calcularMinutos(dto.getIdUsuario(), dto.getIdBarbero(), cita.getServicio());
         cita.setHoraFin(dto.getHoraInicio().plusMinutes(minutos));
         verificarDisponibilidad(dto.getIdBarbero(), dto.getFecha(), dto.getHoraInicio(), cita.getHoraFin());
-        return toDTO(citaRepository.save(cita));
+        CitaDTO saved = toDTO(citaRepository.save(cita));
+        try {
+            Usuario usuario = cita.getUsuario();
+            Barbero barbero = cita.getBarbero();
+            Servicio servicio = cita.getServicio();
+            if (usuario != null && usuario.getTelefono() != null) {
+                twilioService.enviarWhatsAppCreacionCita(
+                        usuario.getTelefono(),
+                        usuario.getNombre(),
+                        barbero != null ? barbero.getNombre() : "Barbero",
+                        servicio != null ? servicio.getNombre() : "Servicio",
+                        cita.getFecha().toString(),
+                        cita.getHoraInicio().toString()
+                );
+            }
+        } catch (Exception e) {
+            log.warn("No se pudo enviar notificación WhatsApp: {}", e.getMessage());
+        }
+        return saved;
     }
 
     @Override
@@ -122,7 +143,23 @@ public class CitaServiceIMP implements CitaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con id: " + id));
         log.info("Cancelando cita {}", id);
         c.setEstado(EstadoCitaEnum.CANCELADA);
-        return toDTO(citaRepository.save(c));
+        CitaDTO saved = toDTO(citaRepository.save(c));
+        try {
+            Usuario usuario = c.getUsuario();
+            Barbero barbero = c.getBarbero();
+            if (usuario != null && usuario.getTelefono() != null) {
+                twilioService.enviarWhatsAppCancelacionCita(
+                        usuario.getTelefono(),
+                        usuario.getNombre(),
+                        barbero != null ? barbero.getNombre() : "Barbero",
+                        c.getFecha().toString(),
+                        c.getHoraInicio().toString()
+                );
+            }
+        } catch (Exception e) {
+            log.warn("No se pudo enviar notificación de cancelación WhatsApp: {}", e.getMessage());
+        }
+        return saved;
     }
 
     @Override
