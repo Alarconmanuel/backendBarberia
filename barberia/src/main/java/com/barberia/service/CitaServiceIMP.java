@@ -162,6 +162,12 @@ public class CitaServiceIMP implements CitaService {
                         barbero.getNombre(), servicio.getNombre(),
                         fecha.toString(), horaInicio.toString());
             }
+            if (barbero.getTelefono() != null) {
+                twilioService.enviarWhatsAppCreacionCitaBarbero(
+                        barbero.getTelefono(), barbero.getNombre(),
+                        usuario.getNombre(), servicio.getNombre(),
+                        fecha.toString(), horaInicio.toString());
+            }
         } catch (Exception e) {
             log.warn("No se pudo enviar notificación WhatsApp: {}", e.getMessage());
         }
@@ -217,6 +223,12 @@ public class CitaServiceIMP implements CitaService {
                 twilioService.enviarWhatsAppCancelacionCita(
                         usuario.getTelefono(), usuario.getNombre(),
                         barbero != null ? barbero.getNombre() : "Barbero",
+                        c.getFecha().toString(), c.getHoraInicio().toString());
+            }
+            if (barbero != null && barbero.getTelefono() != null) {
+                twilioService.enviarWhatsAppCancelacionCitaBarbero(
+                        barbero.getTelefono(), barbero.getNombre(),
+                        usuario != null ? usuario.getNombre() : "Cliente",
                         c.getFecha().toString(), c.getHoraInicio().toString());
             }
         } catch (Exception e) {

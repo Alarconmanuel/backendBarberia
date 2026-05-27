@@ -57,13 +57,37 @@ public class TwilioService {
     }
 
     public void enviarWhatsAppCancelacionCita(String telefonoCliente, String nombreCliente,
-                                              String nombreBarbero, String fecha, String hora) {
+                                               String nombreBarbero, String fecha, String hora) {
         String mensaje = String.format(
                 "Hola %s, tu cita en Barbería con %s del %s a las %s ha sido cancelada.%n%n" +
                 "Si deseas agendar una nueva cita, comunícate con nosotros.",
                 nombreCliente, nombreBarbero, fecha, hora
         );
         enviar(telefonoCliente, mensaje);
+    }
+
+    public void enviarWhatsAppCreacionCitaBarbero(String telefonoBarbero, String nombreBarbero,
+                                                   String nombreCliente, String nombreServicio,
+                                                   String fecha, String hora) {
+        String mensaje = String.format(
+                "Hola %s, tienes una nueva cita agendada:%n" +
+                "Cliente: %s%n" +
+                "Servicio: %s%n" +
+                "Fecha: %s%n" +
+                "Hora: %s%n%n" +
+                "Prepárate para atenderlo!",
+                nombreBarbero, nombreCliente, nombreServicio, fecha, hora
+        );
+        enviar(telefonoBarbero, mensaje);
+    }
+
+    public void enviarWhatsAppCancelacionCitaBarbero(String telefonoBarbero, String nombreBarbero,
+                                                      String nombreCliente, String fecha, String hora) {
+        String mensaje = String.format(
+                "Hola %s, la cita con %s del %s a las %s ha sido cancelada.",
+                nombreBarbero, nombreCliente, fecha, hora
+        );
+        enviar(telefonoBarbero, mensaje);
     }
 
     private void enviar(String telefono, String mensajeTexto) {
