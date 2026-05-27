@@ -33,12 +33,20 @@ public class UsuarioServiceIMP implements UsuarioService {
     }
 
     private Usuario toEntity(UsuarioDTO dto) {
-        Usuario u = new Usuario();
+        Usuario u;
+        if (dto.getIdUsuario() != null) {
+            u = usuarioRepository.findById(dto.getIdUsuario())
+                    .orElseGet(Usuario::new);
+        } else {
+            u = new Usuario();
+        }
         u.setIdUsuario(dto.getIdUsuario());
         u.setNombre(dto.getNombre());
         u.setCorreo(dto.getCorreo());
         u.setTelefono(dto.getTelefono());
-        u.setPassword(dto.getPassword());
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            u.setPassword(dto.getPassword());
+        }
         u.setRol(dto.getRol());
         u.setActivo(dto.getActivo() != null ? dto.getActivo() : true);
         return u;

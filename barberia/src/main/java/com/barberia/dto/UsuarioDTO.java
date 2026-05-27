@@ -19,11 +19,8 @@ public class UsuarioDTO {
     @NotBlank(message = "El correo es obligatorio")
     private String correo;
 
-    @Pattern(regexp = "^[0-9]{10}$", message = "Telefono debe tener 10 digitos")
     private String telefono;
 
-    @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 6, message = "Minimo 6 caracteres")
     private String password;
 
     @NotNull(message = "El rol es obligatorio")
