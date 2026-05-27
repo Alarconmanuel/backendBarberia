@@ -66,4 +66,11 @@ public class ServicioController {
     public List<ServicioDTO> getByDuracion(@PathVariable Integer minutos) {
         return servicioService.findByDuracionMenorIgual(minutos);
     }
+
+    @GetMapping("/especialidad/{especialidad}")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Listar servicios por especialidad")
+    public ResponseEntity<List<ServicioDTO>> getByEspecialidad(@PathVariable String especialidad) {
+        return ResponseEntity.ok(servicioService.findByEspecialidad(especialidad));
+    }
 }

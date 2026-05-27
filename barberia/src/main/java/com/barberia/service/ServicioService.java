@@ -9,4 +9,6 @@ public interface ServicioService {
     ServicioDTO save(ServicioDTO dto);
     void deleteById(Long id);
     List<ServicioDTO> findByDuracionMenorIgual(Integer minutos);
+
+    List<ServicioDTO> findByEspecialidad(String especialidad);
 }

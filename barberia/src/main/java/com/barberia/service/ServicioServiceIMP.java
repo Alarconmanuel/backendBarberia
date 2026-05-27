@@ -28,6 +28,7 @@ public class ServicioServiceIMP implements ServicioService {
         dto.setDescripcion(s.getDescripcion());
         dto.setPrecio(s.getPrecio());
         dto.setDuracionMinutos(s.getDuracionMinutos());
+        dto.setEspecialidad(s.getEspecialidad());
         return dto;
     }
 
@@ -38,6 +39,7 @@ public class ServicioServiceIMP implements ServicioService {
         s.setDescripcion(dto.getDescripcion());
         s.setPrecio(dto.getPrecio());
         s.setDuracionMinutos(dto.getDuracionMinutos());
+        s.setEspecialidad(dto.getEspecialidad());
         return s;
     }
 
@@ -70,5 +72,11 @@ public class ServicioServiceIMP implements ServicioService {
     @Override
     public List<ServicioDTO> findByDuracionMenorIgual(Integer minutos) {
         return servicioRepository.findByDuracionMenorIgual(minutos).stream().map(this::toDTO).toList();
+    }
+
+    @Override
+    public List<ServicioDTO> findByEspecialidad(String especialidad) {
+        return servicioRepository.findByEspecialidadIgnoreCase(especialidad)
+                .stream().map(this::toDTO).toList();
     }
 }

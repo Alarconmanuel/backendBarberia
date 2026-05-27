@@ -22,4 +22,6 @@ public class ServicioDTO {
     @NotNull(message = "La duracion es obligatoria")
     @Min(value = 1, message = "Duracion minima 1 minuto")
     private Integer duracionMinutos;
+
+    private String especialidad;
 }

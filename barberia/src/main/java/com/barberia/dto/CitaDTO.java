@@ -4,6 +4,7 @@ import com.barberia.enums.EstadoCitaEnum;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -25,8 +26,9 @@ public class CitaDTO {
     private LocalDate fecha;
 
     @NotNull(message = "La hora de inicio es obligatoria")
-    private LocalTime horaInicio;
+    private String horaInicio;
 
+    @JsonFormat(pattern = "HH:mm:ss")
     private LocalTime horaFin;
     private EstadoCitaEnum estado;
 }

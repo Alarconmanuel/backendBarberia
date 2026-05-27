@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +55,7 @@ public class CitaServiceIMP implements CitaService {
         dto.setIdBarbero(c.getBarbero() != null ? c.getBarbero().getIdBarbero() : null);
         dto.setIdServicio(c.getServicio() != null ? c.getServicio().getIdServicio() : null);
         dto.setFecha(c.getFecha());
-        dto.setHoraInicio(c.getHoraInicio());
+        dto.setHoraInicio(c.getHoraInicio() != null ? c.getHoraInicio().toString() : null);
         dto.setHoraFin(c.getHoraFin());
         dto.setEstado(c.getEstado());
         return dto;
@@ -64,7 +65,7 @@ public class CitaServiceIMP implements CitaService {
         Cita c = new Cita();
         c.setIdCita(dto.getIdCita());
         c.setFecha(dto.getFecha());
-        c.setHoraInicio(dto.getHoraInicio());
+        c.setHoraInicio(parseHoraFlexible(dto.getHoraInicio()));
         c.setEstado(dto.getEstado() != null ? dto.getEstado() : EstadoCitaEnum.PENDIENTE);
         if (dto.getIdUsuario() != null)
             c.setUsuario(usuarioRepository.findById(dto.getIdUsuario())
@@ -96,8 +97,9 @@ public class CitaServiceIMP implements CitaService {
         log.info("Creando cita para usuario {} con barbero {}", dto.getIdUsuario(), dto.getIdBarbero());
         Cita cita = toEntity(dto);
         int minutos = calcularMinutos(dto.getIdUsuario(), dto.getIdBarbero(), cita.getServicio());
-        cita.setHoraFin(dto.getHoraInicio().plusMinutes(minutos));
-        verificarDisponibilidad(dto.getIdBarbero(), dto.getFecha(), dto.getHoraInicio(), cita.getHoraFin());
+        LocalTime horaInicio = parseHoraFlexible(dto.getHoraInicio());
+        cita.setHoraFin(horaInicio.plusMinutes(minutos));
+        verificarDisponibilidad(dto.getIdBarbero(), dto.getFecha(), horaInicio, cita.getHoraFin());
         CitaDTO saved = toDTO(citaRepository.save(cita));
         try {
             Usuario usuario = cita.getUsuario();
@@ -224,6 +226,21 @@ public class CitaServiceIMP implements CitaService {
             actual = actual.plusMinutes(30);
         }
         return libres;
+    }
+
+    private LocalTime parseHoraFlexible(String hora) {
+        if (hora == null || hora.isBlank()) {
+            throw new IllegalArgumentException("La hora es obligatoria");
+        }
+        try {
+            return LocalTime.parse(hora);
+        } catch (Exception e) {
+            try {
+                return LocalTime.parse(hora + ":00");
+            } catch (Exception ex) {
+                throw new IllegalArgumentException("Formato de hora inválido. Use HH:mm o HH:mm:ss");
+            }
+        }
     }
 
     private int calcularMinutos(Long idUsuario, Long idBarbero, Servicio servicio) {

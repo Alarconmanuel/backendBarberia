@@ -28,4 +28,7 @@ public class Servicio {
 
     @Column(name = "duracion_minutos")
     private Integer duracionMinutos;
+
+    @Column(name = "especialidad", length = 100)
+    private String especialidad;
 }

@@ -13,4 +13,6 @@ public interface ServicioRepository extends JpaRepository<Servicio, Long> {
     // Consulta nativa 1: servicios con duracion menor o igual a X minutos
     @Query(value = "SELECT * FROM servicio WHERE duracion_minutos <= :minutos", nativeQuery = true)
     List<Servicio> findByDuracionMenorIgual(@Param("minutos") Integer minutos);
+
+    List<Servicio> findByEspecialidadIgnoreCase(String especialidad);
 }
