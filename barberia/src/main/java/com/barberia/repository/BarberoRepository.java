@@ -13,10 +13,10 @@ public interface BarberoRepository extends JpaRepository<Barbero, Long> {
     @Query(value = "SELECT * FROM barbero WHERE activo = true", nativeQuery = true)
     List<Barbero> findActivos();
 
-    // Consulta nativa 2: barberos ordenados por cantidad de citas
+    // Consulta nativa 2: barberos ordenados por cantidad de citas (incluye sin citas)
     @Query(value = """
         SELECT b.* FROM barbero b
-        JOIN cita c ON b.id_barbero = c.id_barbero
+        LEFT JOIN cita c ON b.id_barbero = c.id_barbero
         GROUP BY b.id_barbero
         ORDER BY COUNT(c.id_cita) DESC
         """, nativeQuery = true)

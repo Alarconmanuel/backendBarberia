@@ -1,10 +1,16 @@
 package com.barberia.service;
 
 import com.barberia.dto.BarberoDTO;
+import com.barberia.enums.EstadoCitaEnum;
+import com.barberia.enums.TipoNotificacionEnum;
 import com.barberia.exception.ResourceNotFoundException;
 import com.barberia.model.Barbero;
+import com.barberia.model.Cita;
+import com.barberia.model.Notificacion;
 import com.barberia.model.Usuario;
 import com.barberia.repository.BarberoRepository;
+import com.barberia.repository.CitaRepository;
+import com.barberia.repository.NotificacionRepository;
 import com.barberia.repository.UsuarioRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,10 +25,18 @@ public class BarberoServiceIMP implements BarberoService {
 
     private final BarberoRepository barberoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final CitaRepository citaRepository;
+    private final NotificacionRepository notificacionRepository;
+    private final TwilioService twilioService;
 
-    public BarberoServiceIMP(BarberoRepository barberoRepository, UsuarioRepository usuarioRepository) {
+    public BarberoServiceIMP(BarberoRepository barberoRepository, UsuarioRepository usuarioRepository,
+                             CitaRepository citaRepository, NotificacionRepository notificacionRepository,
+                             TwilioService twilioService) {
         this.barberoRepository = barberoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.citaRepository = citaRepository;
+        this.notificacionRepository = notificacionRepository;
+        this.twilioService = twilioService;
     }
 
     private BarberoDTO toDTO(Barbero b) {
@@ -74,6 +88,38 @@ public class BarberoServiceIMP implements BarberoService {
     @Transactional
     public void deleteById(Long id) {
         log.info("Eliminando barbero con id: {}", id);
+        Barbero barbero = barberoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Barbero no encontrado con id: " + id));
+
+        List<Cita> pendientes = citaRepository.findActivasByBarberoYFecha(id, java.time.LocalDate.now());
+        for (Cita c : pendientes) {
+            if (c.getEstado() == EstadoCitaEnum.PENDIENTE) {
+                c.setEstado(EstadoCitaEnum.CANCELADA);
+                citaRepository.save(c);
+                try {
+                    Notificacion n = new Notificacion();
+                    n.setCita(c);
+                    n.setTipo(TipoNotificacionEnum.CITA_CANCELADA);
+                    n.setMensaje("Tu cita fue cancelada porque el barbero " + barbero.getNombre() + " ya no está disponible.");
+                    n.setEnviado(false);
+                    notificacionRepository.save(n);
+                } catch (Exception e) {
+                    log.warn("No se pudo notificar cancelación de cita {}: {}", c.getIdCita(), e.getMessage());
+                }
+                try {
+                    if (c.getUsuario() != null && c.getUsuario().getTelefono() != null) {
+                        twilioService.enviarWhatsAppCancelacionCita(
+                                c.getUsuario().getTelefono(),
+                                c.getUsuario().getNombre(),
+                                barbero.getNombre(),
+                                c.getFecha().toString(),
+                                c.getHoraInicio().toString());
+                    }
+                } catch (Exception e) {
+                    log.warn("No se pudo enviar WhatsApp de cancelación: {}", e.getMessage());
+                }
+            }
+        }
         barberoRepository.deleteById(id);
     }
 

@@ -76,7 +76,10 @@ public class ServicioServiceIMP implements ServicioService {
 
     @Override
     public List<ServicioDTO> findByEspecialidad(String especialidad) {
-        return servicioRepository.findByEspecialidadIgnoreCase(especialidad)
+        if (especialidad == null || especialidad.isBlank()) {
+            return List.of();
+        }
+        return servicioRepository.findByEspecialidadIgnoreCase(especialidad.trim())
                 .stream().map(this::toDTO).toList();
     }
 }

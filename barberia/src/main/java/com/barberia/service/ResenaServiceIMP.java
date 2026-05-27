@@ -1,7 +1,10 @@
 package com.barberia.service;
 
 import com.barberia.dto.ResenaDTO;
+import com.barberia.enums.EstadoCitaEnum;
+import com.barberia.exception.BadRequestException;
 import com.barberia.exception.ResourceNotFoundException;
+import com.barberia.model.Cita;
 import com.barberia.model.Resena;
 import com.barberia.repository.*;
 import org.slf4j.Logger;
@@ -43,7 +46,7 @@ public class ResenaServiceIMP implements ResenaService {
         Resena r = new Resena();
         r.setIdResena(dto.getIdResena());
         r.setCalificacion(dto.getCalificacion());
-        r.setComentario(dto.getComentario());
+        r.setComentario(dto.getComentario() != null && dto.getComentario().isBlank() ? null : dto.getComentario());
         if (dto.getIdCita() != null)
             r.setCita(citaRepository.findById(dto.getIdCita())
                     .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con id: " + dto.getIdCita())));
@@ -72,6 +75,38 @@ public class ResenaServiceIMP implements ResenaService {
     @Transactional
     public ResenaDTO save(ResenaDTO dto) {
         log.info("Creando resena para cita {}, barbero {}, calificacion {}", dto.getIdCita(), dto.getIdBarbero(), dto.getCalificacion());
+
+        if (dto.getIdCita() == null) {
+            throw new BadRequestException("La cita es obligatoria");
+        }
+        if (dto.getIdUsuario() == null) {
+            throw new BadRequestException("El usuario es obligatorio");
+        }
+        if (dto.getIdBarbero() == null) {
+            throw new BadRequestException("El barbero es obligatorio");
+        }
+        if (dto.getCalificacion() == null || dto.getCalificacion() < 1 || dto.getCalificacion() > 5) {
+            throw new BadRequestException("La calificación debe estar entre 1 y 5");
+        }
+
+        Cita cita = citaRepository.findById(dto.getIdCita())
+                .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con id: " + dto.getIdCita()));
+
+        if (cita.getEstado() != EstadoCitaEnum.FINALIZADA) {
+            throw new BadRequestException("Solo se puede reseñar una cita finalizada (actual: " + cita.getEstado() + ")");
+        }
+
+        if (resenaRepository.findByCita(dto.getIdCita()).isPresent()) {
+            throw new BadRequestException("La cita ya tiene una reseña registrada");
+        }
+
+        if (cita.getUsuario() == null || !cita.getUsuario().getIdUsuario().equals(dto.getIdUsuario())) {
+            throw new BadRequestException("La cita no pertenece al usuario especificado");
+        }
+        if (cita.getBarbero() == null || !cita.getBarbero().getIdBarbero().equals(dto.getIdBarbero())) {
+            throw new BadRequestException("La cita no corresponde al barbero especificado");
+        }
+
         return toDTO(resenaRepository.save(toEntity(dto)));
     }
 

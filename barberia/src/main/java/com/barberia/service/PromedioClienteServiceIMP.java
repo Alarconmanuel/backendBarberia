@@ -46,6 +46,13 @@ public class PromedioClienteServiceIMP implements PromedioClienteService {
     public PromedioClienteDTO findByUsuarioYBarbero(Long idUsuario, Long idBarbero) {
         return promedioRepository.findByUsuarioYBarbero(idUsuario, idBarbero)
                 .map(this::toDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("Promedio no encontrado para usuario " + idUsuario + " y barbero " + idBarbero));
+                .orElseGet(() -> {
+                    PromedioClienteDTO dto = new PromedioClienteDTO();
+                    dto.setIdUsuario(idUsuario);
+                    dto.setIdBarbero(idBarbero);
+                    dto.setDuracionPromedioMinutos(0.0);
+                    dto.setTotalCitas(0);
+                    return dto;
+                });
     }
 }

@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 
 @CrossOrigin(origins = "*")
@@ -82,10 +81,10 @@ public class CitaController {
     @GetMapping("/disponibilidad")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Obtener horas disponibles para un barbero en una fecha")
-    public ResponseEntity<List<LocalTime>> getDisponibilidad(
+    public ResponseEntity<List<String>> getDisponibilidad(
             @RequestParam Long idBarbero,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
-        List<LocalTime> disponibilidad = citaService.getDisponibilidad(idBarbero, fecha);
+        List<String> disponibilidad = citaService.getDisponibilidad(idBarbero, fecha);
         return ResponseEntity.ok(disponibilidad);
     }
 
